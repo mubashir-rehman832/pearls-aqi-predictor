@@ -3,4 +3,6 @@ __pycache__/
 *.pyc
 *.pkl
 .env
-*.cpython-312.pyc
+Lib/
+Scripts/
+
