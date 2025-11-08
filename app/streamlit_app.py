@@ -15,11 +15,12 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 from datetime import datetime
 
-# Hopsworks secrets from Streamlit Cloud environment
-HOPSWORKS_API_KEY = st.secrets.get("HOPSWORKS_API_KEY")
-HOPSWORKS_PROJECT = st.secrets.get("HOPSWORKS_PROJECT")
-HOPSWORKS_USERNAME = st.secrets.get("HOPSWORKS_USERNAME")
-HOPSWORKS_PASSWORD = st.secrets.get("HOPSWORKS_PASSWORD")  # optional
+# -------------------- HOPSWORKS IMPORT (OPTIONAL) --------------------
+try:
+    from src.hopsworks_utils import upload_to_hopsworks
+    HOPSWORKS_AVAILABLE = True
+except ImportError:
+    HOPSWORKS_AVAILABLE = False
 
 # -------------------- LOCAL IMPORTS --------------------
 from src.utils import load_data  # Removed preprocess_data import
@@ -27,7 +28,6 @@ from src.predict import predict_next3days
 from src.train_randomforest import train_randomforest
 from src.train_xgboost import train_xgboost
 from src.train_linear import train_linear
-from src.hopsworks_utils import upload_to_hopsworks
 
 # -------------------- STREAMLIT PAGE CONFIG --------------------
 st.set_page_config(page_title="🌍 Pearls AQI Predictor", layout="wide")
@@ -79,16 +79,19 @@ with col1:
 
 # ☁️ Sync to Hopsworks
 with col2:
-    if st.button("☁️ Sync to Hopsworks"):
-        with st.spinner("Uploading data to Hopsworks Feature Store..."):
-            try:
-                if df.empty:
-                    st.warning("⚠️ No data to upload!")
-                else:
-                    upload_to_hopsworks(df)
-                    st.success(f"✅ Synced {len(df)} records to Hopsworks successfully!")
-            except Exception as e:
-                st.error(f"❌ Upload failed: {e}")
+    if HOPSWORKS_AVAILABLE:
+        if st.button("☁️ Sync to Hopsworks"):
+            with st.spinner("Uploading data to Hopsworks Feature Store..."):
+                try:
+                    if df.empty:
+                        st.warning("⚠️ No data to upload!")
+                    else:
+                        upload_to_hopsworks(df)
+                        st.success(f"✅ Synced {len(df)} records to Hopsworks successfully!")
+                except Exception as e:
+                    st.error(f"❌ Upload failed: {e}")
+    else:
+        st.info("⚠️ Hopsworks not available in this environment")
 
 # 🔮 Predict 3 Days
 with col3:
@@ -190,3 +193,4 @@ if not df.empty:
 # --- Footer ---
 st.markdown("<hr>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center; color:#0d47a1;'>© 2025 Pearls AQI Project | Developed by Mubashir Rehman</p>", unsafe_allow_html=True)
+
