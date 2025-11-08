@@ -1,21 +1,35 @@
-# app/streamlit_app.py
+# -------------------- FIX FOR STREAMLIT CLOUD --------------------
+import sys
+import os
+
+# Add repo root to Python path so 'src' folder modules can be imported
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+# -------------------- IMPORTS --------------------
 import streamlit as st
 import pandas as pd
-import joblib
-import os
 import numpy as np
 import matplotlib.pyplot as plt
+import joblib
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
-from src.utils import load_data
+from datetime import datetime
+
+# Hopsworks secrets from Streamlit Cloud environment
+HOPSWORKS_API_KEY = st.secrets.get("HOPSWORKS_API_KEY")
+HOPSWORKS_PROJECT = st.secrets.get("HOPSWORKS_PROJECT")
+HOPSWORKS_USERNAME = st.secrets.get("HOPSWORKS_USERNAME")
+HOPSWORKS_PASSWORD = st.secrets.get("HOPSWORKS_PASSWORD")  # optional
+
+# -------------------- LOCAL IMPORTS --------------------
+from src.utils import load_data  # Removed preprocess_data import
 from src.predict import predict_next3days
 from src.train_randomforest import train_randomforest
 from src.train_xgboost import train_xgboost
 from src.train_linear import train_linear
 from src.hopsworks_utils import upload_to_hopsworks
-from datetime import datetime
 
-# 🌈 --- Streamlit Page Config ---
+# -------------------- STREAMLIT PAGE CONFIG --------------------
 st.set_page_config(page_title="🌍 Pearls AQI Predictor", layout="wide")
 
 # --- Custom CSS for styling ---
@@ -93,24 +107,13 @@ metrics = []
 for model_name, path in model_files.items():
     if os.path.exists(path):
         model = joblib.load(path)
-        
-        # ✅ Features and target
         X = df[['PM2_5','PM10','NO2','SO2','CO','O3','hour','day','month']].dropna()
         y = df.loc[X.index, 'AQI']
-
-        # ✅ Train/test split for realistic metrics
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42
-        )
-
-        # ✅ Predict
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         y_pred = model.predict(X_test)
-        y_pred = np.clip(y_pred, 0, 500)  # Clip to valid AQI range
-
-        # ✅ Calculate metrics
+        y_pred = np.clip(y_pred, 0, 500)
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
         r2 = r2_score(y_test, y_pred)
-
         metrics.append({"Model": model_name, "RMSE": rmse, "R²": r2})
     else:
         metrics.append({"Model": model_name, "RMSE": None, "R²": None})
@@ -148,19 +151,13 @@ try:
     if df_pred.empty:
         st.info("⚠️ No forecast data available.")
     else:
-        # --- Remove duplicate columns ---
         df_pred = df_pred.loc[:, ~df_pred.columns.duplicated()]
-
-        # ✅ Clip predicted AQI values
         for col in df_pred.columns:
             if "Predicted_AQI" in col or col == "Average_Predicted_AQI":
                 df_pred[col] = np.clip(df_pred[col], 0, 500)
-
-        # --- Compute single average for the next 3 days ---
         if "Average_Predicted_AQI" in df_pred.columns:
             avg_aqi = round(df_pred["Average_Predicted_AQI"].mean())
             category, color = categorize_aqi(avg_aqi)
-            # Show as colored metric
             st.markdown(f"""
                 <div style="background-color:{color}; padding:25px; border-radius:15px; text-align:center; color:white;">
                     <h2>Next 3-Day Average AQI</h2>
@@ -168,8 +165,6 @@ try:
                     <h3>{category}</h3>
                 </div>
             """, unsafe_allow_html=True)
-
-        # --- Active vs Average Predicted AQI Chart ---
         st.subheader("📈 Active vs Average Predicted AQI")
         plot_cols = ["AQI"]
         if "Average_Predicted_AQI" in df_pred.columns:
@@ -177,21 +172,14 @@ try:
         if len(plot_cols) > 0:
             chart_df = df_pred.set_index("datetime")[plot_cols]
             st.line_chart(chart_df)
-
-        # --- Model-wise Predicted AQI Chart ---
         st.subheader("📊 Model-wise Predicted AQI")
         model_cols = [col for col in df_pred.columns if "_Predicted_AQI" in col]
         if len(model_cols) > 0:
             st.line_chart(df_pred.set_index("datetime")[model_cols])
         else:
             st.info("⚠️ No model predictions available to plot.")
-
 except Exception as e:
     st.error(f"Prediction failed: {e}")
-
-
-
-
 
 # --- Pollutant Trends ---
 st.subheader("📉 Pollutant Trends Over Time")
@@ -202,12 +190,3 @@ if not df.empty:
 # --- Footer ---
 st.markdown("<hr>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center; color:#0d47a1;'>© 2025 Pearls AQI Project | Developed by Mubashir Rehman</p>", unsafe_allow_html=True)
-
-
-
-
-
-
-
-
-
