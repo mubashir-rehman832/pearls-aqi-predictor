@@ -1,4 +1,4 @@
-# Core packages for AQI predictor
+# -------------------- CORE PACKAGES --------------------
 pandas==2.2.3
 numpy==1.26.4
 scikit-learn==1.7.2
@@ -12,10 +12,11 @@ shap==0.42.1
 python-dotenv==1.0.0
 requests==2.32.3
 
-# Optional: Hopsworks integration (for Linux / Cloud / WSL only)
-# hopsworks==4.4.2
-# sqlalchemy<2.0
-# hopsworks-aiomysql[sa]==0.2.1
+# -------------------- OPTIONAL HOPSWORKS (FOR LINUX / CLOUD ONLY) --------------------
+hopsworks==4.4.2 ; sys_platform != "win32"
+sqlalchemy<2.0 ; sys_platform != "win32"
+hopsworks-aiomysql[sa]==0.2.1 ; sys_platform != "win32"
+
 
 
 

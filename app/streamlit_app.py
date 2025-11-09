@@ -22,8 +22,18 @@ try:
 except ImportError:
     HOPSWORKS_AVAILABLE = False
 
+# -------------------- STREAMLIT CLOUD SECRETS --------------------
+if HOPSWORKS_AVAILABLE:
+    try:
+        HOPSWORKS_API_KEY = st.secrets["HOPSWORKS_API_KEY"]
+        HOPSWORKS_PROJECT = st.secrets["HOPSWORKS_PROJECT"]
+        HOPSWORKS_USERNAME = st.secrets["HOPSWORKS_USERNAME"]
+        HOPSWORKS_PASSWORD = st.secrets["HOPSWORKS_PASSWORD"]
+    except KeyError:
+        st.warning("⚠️ Hopsworks secrets are missing in Streamlit Cloud!")
+
 # -------------------- LOCAL IMPORTS --------------------
-from src.utils import load_data  # Removed preprocess_data import
+from src.utils import load_data
 from src.predict import predict_next3days
 from src.train_randomforest import train_randomforest
 from src.train_xgboost import train_xgboost
@@ -79,14 +89,20 @@ with col1:
 
 # ☁️ Sync to Hopsworks
 with col2:
-    if HOPSWORKS_AVAILABLE:
+    if HOPSWORKS_AVAILABLE and 'HOPSWORKS_API_KEY' in locals():
         if st.button("☁️ Sync to Hopsworks"):
             with st.spinner("Uploading data to Hopsworks Feature Store..."):
                 try:
                     if df.empty:
                         st.warning("⚠️ No data to upload!")
                     else:
-                        upload_to_hopsworks(df)
+                        upload_to_hopsworks(
+                            df,
+                            api_key=HOPSWORKS_API_KEY,
+                            project=HOPSWORKS_PROJECT,
+                            username=HOPSWORKS_USERNAME,
+                            password=HOPSWORKS_PASSWORD
+                        )
                         st.success(f"✅ Synced {len(df)} records to Hopsworks successfully!")
                 except Exception as e:
                     st.error(f"❌ Upload failed: {e}")
@@ -193,4 +209,3 @@ if not df.empty:
 # --- Footer ---
 st.markdown("<hr>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center; color:#0d47a1;'>© 2025 Pearls AQI Project | Developed by Mubashir Rehman</p>", unsafe_allow_html=True)
-
