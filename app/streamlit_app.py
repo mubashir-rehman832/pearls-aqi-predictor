@@ -88,26 +88,34 @@ with col1:
             st.success("✅ XGBoost trained!")
 
 # ☁️ Sync to Hopsworks
+# ☁️ Sync to Hopsworks (shows button when secrets present; safe if hopsworks not installed)
 with col2:
-    if HOPSWORKS_AVAILABLE and 'HOPSWORKS_API_KEY' in locals():
+    # Check if secrets exist in Streamlit environment (works both local and cloud)
+    if "HOPSWORKS_API_KEY" in st.secrets and "HOPSWORKS_PROJECT" in st.secrets and "HOPSWORKS_USERNAME" in st.secrets:
         if st.button("☁️ Sync to Hopsworks"):
-            with st.spinner("Uploading data to Hopsworks Feature Store..."):
-                try:
-                    if df.empty:
-                        st.warning("⚠️ No data to upload!")
-                    else:
-                        upload_to_hopsworks(
-                            df,
-                            api_key=HOPSWORKS_API_KEY,
-                            project=HOPSWORKS_PROJECT,
-                            username=HOPSWORKS_USERNAME,
-                            password=HOPSWORKS_PASSWORD
-                        )
-                        st.success(f"✅ Synced {len(df)} records to Hopsworks successfully!")
-                except Exception as e:
-                    st.error(f"❌ Upload failed: {e}")
+            # If hopsworks package is installed, call upload; otherwise inform user
+            if HOPSWORKS_AVAILABLE:
+                with st.spinner("Uploading data to Hopsworks Feature Store..."):
+                    try:
+                        if df.empty:
+                            st.warning("⚠️ No data to upload!")
+                        else:
+                            upload_to_hopsworks(
+                                df,
+                                api_key=st.secrets["HOPSWORKS_API_KEY"],
+                                project=st.secrets["HOPSWORKS_PROJECT"],
+                                username=st.secrets["HOPSWORKS_USERNAME"],
+                                password=st.secrets.get("HOPSWORKS_PASSWORD")  # optional
+                            )
+                            st.success(f"✅ Synced {len(df)} records to Hopsworks successfully!")
+                    except Exception as e:
+                        st.error(f"❌ Upload failed: {e}")
+            else:
+                st.info("⚠️ Hopsworks package not installed in this environment. Upload not possible here.")
     else:
-        st.info("⚠️ Hopsworks not available in this environment")
+        # If secrets not set, show info (keeps UI clean)
+        st.info("⚠️ Hopsworks credentials not configured. Add secrets in Streamlit Cloud or set locally to enable sync.")
+
 
 # 🔮 Predict 3 Days
 with col3:
