@@ -1,0 +1,52 @@
+Air Quality Index (AQI) Predictor Report
+
+1. Project Overview:
+The Air Quality Index (AQI) Predictor is a machine learning-based application designed to forecast AQI for the next three days using historical and real-time environmental data. Historical data spanning six months is collected through the OpenWeather API, capturing key features such as PM2.5, PM10, temperature, humidity, wind speed, and previous AQI values. This data is cleaned, preprocessed, and engineered into meaningful features, which are then stored in the Hopsworks AI Feature Store for efficient retrieval. Additionally, processed data is saved in Excel format for reproducibility and local analysis. The system incorporates multiple predictive models, including Linear Regression, XGBoost, and Random Forest, to determine the most accurate method for AQI forecasting. A Streamlit frontend allows users to interactively view predicted AQI values, model comparisons, and pollutant trends. Deployment via GitHub and GitHub Actions ensures continuous integration and smooth updates. Overall, the AQI Predictor combines automated data retrieval, structured feature management, and robust modeling to provide actionable insights for monitoring and decision-making regarding air quality.
+
+2. Data Collection and Preprocessing:
+Data is sourced from the OpenWeather API, which provides both historical records and short-term forecasts. Using the API key, six months of hourly AQI and pollutant measurements are collected, along with temperature, humidity, and wind speed. This raw data undergoes preprocessing, including filling missing values, filtering anomalies, and aggregating readings to daily summaries.
+Exploratory Data Analysis (EDA) is conducted to uncover patterns and correlations, and to visualize trends over time. Key visualizations include:
+Correlation Heatmap: shows relationships among AQI and features such as PM2.5, PM10, temperature, and humidity.
+AQI Distribution: depicts frequency and spread of AQI values.
+PM2.5 vs AQI Scatter Plot: visualizes pollutant impact on air quality.
+AQI over Time: trend analysis to detect seasonal and temporal patterns.
+Feature selection is performed using Random Forest importance scores and SHAP values to identify features that significantly influence predictions. Key features include temperature, humidity, wind speed, pollutant levels, and historical AQI values. Once processed, the dataset is stored in Hopsworks and exported to Excel for analysis and model training.
+
+
+3. Model Selection and Training
+Three machine learning models were implemented for AQI prediction:
+
+Observations:
+Random Forest achieved the lowest RMSE and highest R², making it the final and preferred model for AQI prediction.
+Model performance is visualized by comparing active vs predicted AQI values.
+Pollutant trends and feature impacts are further highlighted through interactive charts, providing insight into which variables most influence air quality.
+
+4. Deployment and Frontend:
+The Streamlit frontend provides users with:
+1.3-day AQI predictions along with category labels (Moderate, Unhealthy, Hazardous).
+2.Comparison charts for active vs predicted AQI values across different models.
+3.Visualizations of pollutant trends over time.
+Feature Store Integration: Hopsworks is used for storing processed features. However, the Hopsworks button currently does not function in cloud deployment, so only average AQI values are shown in the Streamlit cloud app.
+GitHub Actions is configured for automated deployment, ensuring that updates to the repository are seamlessly reflected in the app. Locally, the app can be run using:
+ Python –m streamlit run app/streamlit_app.py
+
+5. Limitations:
+1. Prediction accuracy is dependent on the quality and completeness of historical data.
+2. Unexpected environmental events, such as storms or wildfires, can impact forecast reliability.
+3. Hopsworks button is non-functional in the cloud deployment, which limits real-time feature retrieval and updates.
+
+6. Additional Notes:
+Libraries Used: Pandas, NumPy, Scikit-learn, XGBoost, Matplotlib, Plotly, SHAP, Streamlit.
+Local Setup: Python virtual environment (venv) is used to isolate dependencies, which can be installed via requirements.txt.
+EDA Charts: Essential for identifying patterns, correlations, and key features prior to model training.
+Feature Engineering: Key for improving prediction accuracy; Random Forest feature importance shows PM2.5 and historical AQI as most influential.
+
+7. Key Takeaways:
+1. Random Forest is the best-performing model, outperforming Linear Regression and XGBoost in both accuracy and robustness.
+2. Effective EDA and feature engineering are critical to achieving high predictive performance.
+3. Interactive visualizations help compare active vs predicted AQI and reveal pollutant trends over time.
+4. Deployment via GitHub and Streamlit ensures reproducibility and provides a user-friendly interface.
+5. Future improvements may include real-time API updates, full Hopsworks integration, and strategies to handle extreme environmental events.
+
+                                                                
+
